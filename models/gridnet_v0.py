@@ -46,8 +46,8 @@ def get_model(point_cloud, is_training, bn_decay=None):
     end_points = {}
     input_image = tf.reshape(point_cloud, [-1, 3])
 
-    grid_num = 96
-    super_vec_num = 10
+    grid_num = 80
+    super_vec_num = 100
 
     w_encode = tf.Variable( tf.random_normal([3, grid_num], stddev=0.2), name='w_encode', dtype=tf.float32 )
     
