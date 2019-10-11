@@ -77,13 +77,13 @@ def get_model(point_cloud, is_training, bn_decay=None):
     ex_value_w = tf.tile(ex_value_w, [batch_size, 1, 1, 1])
     
     
-    get_value = lambda k1, k2, v2: tf.reduce_sum(v2*tf.nn.softmax( \
-        tf.matmul(k1, k2, transpose_b=True)/grid_num, axis=-1), axis=[-1])
+    get_value = lambda k1, k2, v2: tf.matmul( tf.nn.softmax( \
+        tf.matmul(k1, k2, transpose_b=True)/grid_num, axis=-1), v2 )
 
 
     net = get_value(ex_key_w, ex_key_in, ex_value_in) * get_value(ex_key_w, ex_key_w, ex_value_w) \
         + get_value(ex_key_in, ex_key_w, ex_value_w) * get_value(ex_key_in, ex_key_in, ex_value_in) 
-    net = tf.reduce_sum(net, axis=2)
+    net = tf.reduce_sum(net, axis=[2,3] )
 
     print(net.get_shape())
 
