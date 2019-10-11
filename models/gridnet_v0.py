@@ -55,7 +55,7 @@ def get_model(point_cloud, is_training, bn_decay=None):
     for i in range(super_vec_num):
         super_vecs.append( func(None, 'super_vec_' + str(i), [1024, grid_num]) )
 
-    input_image_split = tf.split(input_image, axis=0)
+    input_image_split = tf.split(input_image, batch_size, axis=0)
     items = [] 
     for img in input_image_split:
         keys = tf.matmul( tf.squeeze(img), w_encode )
