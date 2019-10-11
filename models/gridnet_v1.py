@@ -57,6 +57,7 @@ def get_model(point_cloud, is_training, bn_decay=None):
     value_in = tf.ones([batch_size, num_point, 1], dtype=tf.float32)
 
     key_w = tf.Variable( tf.random_normal([super_vec_num, num_point, grid_num], stddev=0.1), name='w_keys', dtype=tf.float32 )
+    key_w = tf.concat([tf.cos(key_w), tf.sin(key_w)], axis=2)
     value_w = tf.Variable( tf.random_normal( [super_vec_num, num_point, 1], stddev=0.3), name='w_values', dtype=tf.float32 )
 
     ex_key_in = tf.reshape(key_in, [batch_size, 1, num_point, -1])
@@ -71,7 +72,7 @@ def get_model(point_cloud, is_training, bn_decay=None):
     
     
     get_value = lambda k1, k2, v2: tf.reduce_sum(v2*tf.nn.softmax( \
-        tf.matmul(k1*k2, transpose_b=True)/grid_num, axis=-1), axis=[-1])
+        tf.matmul(k1, k2, transpose_b=True)/grid_num, axis=-1), axis=[-1])
 
 
     net = get_value(ex_key_w, ex_key_in, ex_value_in) * get_value(ex_key_w, ex_key_w, ex_value_w) \
