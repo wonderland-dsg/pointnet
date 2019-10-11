@@ -30,7 +30,7 @@ class func():
         query_r_2 = tf.matmul(tf.nn.softmax(tf.matmul(all_keys, keys_2, transpose_b=True)/self.n), values_2)
 
         query_r = query_r_1*query_r_2
-        return tf.reduce_sum(query_r)
+        return tf.reduce_sum(query_r, axis=0)
 
 
 def placeholder_inputs(batch_size, num_point):
@@ -47,13 +47,13 @@ def get_model(point_cloud, is_training, bn_decay=None):
     input_image = tf.reshape(point_cloud, [-1, 3])
 
     grid_num = 96
-    super_vec_num = 256
+    super_vec_num = 10
 
     w_encode = tf.Variable( tf.random_normal([3, grid_num], stddev=0.2), name='w_encode', dtype=tf.float32 )
     
     super_vecs = []
     for i in range(super_vec_num):
-        super_vecs.append( func(None, 'super_vec_' + str(i), [1024, grid_num]) )
+        super_vecs.append( func(None, 'super_vec_' + str(i), [256, grid_num]) )
 
     input_image_split = tf.split(input_image, batch_size, axis=0)
     items = [] 
