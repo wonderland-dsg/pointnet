@@ -39,8 +39,11 @@ def placeholder_inputs(batch_size, num_point):
     return pointclouds_pl, labels_pl
 
 
+w_encode = None
 def get_model(point_cloud, is_training, bn_decay=None):
     """ Classification PointNet, input is BxNx3, output Bx40 """
+    global w_encode
+
     batch_size = point_cloud.get_shape()[0].value
     num_point = point_cloud.get_shape()[1].value
     end_points = {}
@@ -56,8 +59,11 @@ def get_model(point_cloud, is_training, bn_decay=None):
     key_in = tf.concat([tf.cos(key_in), tf.sin(key_in)], axis=2)
     value_in = tf.ones([batch_size, num_point, 1], dtype=tf.float32)
 
-    key_w = tf.Variable( tf.random_normal([super_vec_num, num_point, grid_num], stddev=0.1), name='w_keys', dtype=tf.float32 )
-    key_w = tf.concat([tf.cos(key_w), tf.sin(key_w)], axis=2)
+    key_w = tf.Variable( tf.random_uniform([super_vec_num*num_point, 3], 0, 1), name='w_keys', dtype=tf.float32 )
+    key_w = tf.matmul( key_w, w_encode )
+    key_w = tf.reshape( key_w, [super_vec_num, num_point, -1] )
+    #key_w = tf.concat([tf.cos(key_w), tf.sin(key_w)], axis=2)
+    key_w = tf.concat([key_w, key_w], axis=2)
     value_w = tf.Variable( tf.random_normal( [super_vec_num, num_point, 1], stddev=0.3), name='w_values', dtype=tf.float32 )
 
     ex_key_in = tf.reshape(key_in, [batch_size, 1, num_point, -1])
@@ -97,8 +103,11 @@ def get_loss(pred, label, end_points):
         label: B, """
     loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=pred, labels=label)
     classify_loss = tf.reduce_mean(loss)
+    re_loss = tf.reduce_mean(tf.square(w_encode))
     tf.summary.scalar('classify loss', classify_loss)
-    return classify_loss
+    tf.summary.scalar('re loss', re_loss)
+
+    return classify_loss + 0.1*re_loss
 
 
 if __name__=='__main__':
